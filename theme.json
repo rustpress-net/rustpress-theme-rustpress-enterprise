@@ -1,0 +1,10 @@
+{
+  "name": "RustPress Enterprise",
+  "version": "1.0.0",
+  "description": "The official enterprise theme for RustPress CMS",
+  "author": "RustPress Team",
+  "license": "MIT",
+  "homepage": "https://github.com/rustpress-net/rustpress-theme-rustpress-enterprise",
+  "keywords": ["enterprise", "business", "professional", "multisite"],
+  "rustpress_version": ">=1.0.0"
+}

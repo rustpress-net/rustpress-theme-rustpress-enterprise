@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main, release, development]
+  pull_request:
+    branches: [main, release, development]
+
+jobs:
+  validate:
+    name: Validate Theme
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate theme.json
+        run: |
+          if [ ! -f theme.json ]; then
+            echo "Error: theme.json not found"
+            exit 1
+          fi
+          cat theme.json | python3 -m json.tool > /dev/null
+          echo "theme.json is valid"
+
+      - name: Check required files
+        run: |
+          for file in README.md LICENSE theme.json; do
+            if [ ! -f "$file" ]; then
+              echo "Error: $file not found"
+              exit 1
+            fi
+          done
+          echo "All required files present"
