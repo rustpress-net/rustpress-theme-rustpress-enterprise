@@ -22,10 +22,13 @@ jobs:
           jq empty theme.json || (echo "Error: Invalid JSON in theme.json" && exit 1)
           echo "theme.json is valid"
 
-      - name: Check required files
+      - name: Check required structure
         run: |
-          for file in "templates/index.html" "static/style.css"; do
-            if [ ! -f "$file" ]; then
-              echo "Warning: $file not found"
+          echo "Checking theme structure..."
+          for dir in templates static; do
+            if [ -d "$dir" ]; then
+              echo "✓ $dir/ exists"
+            else
+              echo "⚠ $dir/ not found"
             fi
           done
