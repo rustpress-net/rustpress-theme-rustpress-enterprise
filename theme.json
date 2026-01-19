@@ -1,47 +1,31 @@
 {
-  "name": "RustPress Enterprise",
-  "version": "2.0.0",
-  "description": "The official RustPress theme - A stunning, animated landing page showcasing RustPress CMS. Features rust-orange color scheme, modern animations, AI integration highlights, developer ecosystem showcase, and full CMS compatibility.",
+  "name": "RustPress Enterprise (Static)",
+  "version": "2.0.0-static",
+  "description": "Static HTML version of the RustPress Enterprise theme. A stunning, animated landing page that works without any backend. Features rust-orange color scheme, modern animations, and a complete static site structure.",
   "author": "RustPress Team",
   "license": "MIT",
   "homepage": "https://rustpress.net",
   "repository": "https://github.com/rustpress-net/rustpress-theme-rustpress-enterprise",
   "keywords": [
-    "rustpress",
-    "cms",
+    "static-site",
+    "html",
     "theme",
     "landing-page",
     "animated",
-    "rust",
-    "ai-integrated"
+    "no-backend"
   ],
-  "engines": {
-    "rustpress": ">=1.0.0"
-  },
-  "main": "templates/base.html",
-  "templates": {
-    "home": "templates/pages/home.html",
-    "page": "templates/pages/page.html",
-    "post": "templates/pages/post.html",
-    "blog": "templates/pages/blog.html",
-    "archive": "templates/pages/archive.html",
-    "contact": "templates/pages/contact.html",
-    "404": "templates/pages/404.html"
-  },
-  "partials": {
-    "header": "templates/partials/header.html",
-    "footer": "templates/partials/footer.html",
-    "sidebar": "templates/partials/sidebar.html",
-    "mobile-menu": "templates/partials/mobile-menu.html",
-    "hero": "templates/partials/hero.html",
-    "features": "templates/partials/features.html",
-    "ai-showcase": "templates/partials/ai-showcase.html",
-    "ecosystem": "templates/partials/ecosystem.html",
-    "comparison": "templates/partials/comparison.html",
-    "gallery": "templates/partials/gallery.html",
-    "donations": "templates/partials/donations.html",
-    "contact-form": "templates/partials/contact-form.html",
-    "stats": "templates/partials/stats.html"
+  "type": "static",
+  "main": "index.html",
+  "pages": {
+    "home": "index.html",
+    "themes": "themes.html",
+    "plugins": "plugins.html",
+    "features": "features.html",
+    "pricing": "pricing.html",
+    "about": "about.html",
+    "ide": "ide.html",
+    "roadmap": "roadmap.html",
+    "contact": "contact.html"
   },
   "assets": {
     "css": [
@@ -64,67 +48,18 @@
       "assets/js/main.js"
     ]
   },
-  "customizable": {
-    "colors": {
-      "primary": "#CE422B",
-      "secondary": "#B87333",
-      "accent": "#E97451",
-      "background": "#0D0D0D",
-      "surface": "#1A1A1A",
-      "text": "#FFFFFF",
-      "text-muted": "#A0A0A0"
-    },
-    "fonts": {
-      "heading": "Space Grotesk",
-      "body": "Inter",
-      "code": "JetBrains Mono"
-    },
-    "features": {
-      "particles": true,
-      "darkMode": true,
-      "animations": true,
-      "contactForm": true,
-      "donations": true,
-      "blog": true
-    }
+  "colors": {
+    "primary": "#CE422B",
+    "secondary": "#B87333",
+    "accent": "#E97451",
+    "background": "#0D0D0D",
+    "surface": "#1A1A1A",
+    "text": "#FFFFFF",
+    "text-muted": "#A0A0A0"
   },
-  "menus": {
-    "primary": {
-      "location": "header",
-      "depth": 2
-    },
-    "footer": {
-      "location": "footer",
-      "depth": 1
-    },
-    "mobile": {
-      "location": "mobile-menu",
-      "depth": 2
-    }
-  },
-  "sidebars": {
-    "blog": {
-      "name": "Blog Sidebar",
-      "description": "Widgets for blog pages"
-    },
-    "page": {
-      "name": "Page Sidebar",
-      "description": "Widgets for static pages"
-    }
-  },
-  "supports": [
-    "posts",
-    "pages",
-    "menus",
-    "widgets",
-    "custom-logo",
-    "custom-header",
-    "custom-footer",
-    "featured-images",
-    "excerpts",
-    "comments",
-    "search",
-    "rss",
-    "sitemap"
-  ]
+  "fonts": {
+    "heading": "Space Grotesk",
+    "body": "Inter",
+    "code": "JetBrains Mono"
+  }
 }
