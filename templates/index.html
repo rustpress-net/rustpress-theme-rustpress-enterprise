@@ -1,0 +1,352 @@
+{% extends "templates/base.html" %}
+
+{% block title %}{{ page.title | default(value="Home") }} - {{ site.name | default(value="RustPress") }}{% endblock %}
+
+{% block content %}
+<main class="main-content">
+  <!-- Page Header -->
+  <section class="page-header">
+    <div class="container">
+      <div class="page-header-content" data-animate="fade-up">
+        {% if page.title %}
+        <h1 class="page-title">{{ page.title }}</h1>
+        {% endif %}
+
+        {% if page.description %}
+        <p class="page-description">{{ page.description }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Page Content -->
+  <section class="page-content section">
+    <div class="container">
+      <div class="content-layout">
+        <!-- Main Content -->
+        <article class="content-main" data-animate="fade-up">
+          {% if content %}
+          <div class="prose">
+            {{ content | safe }}
+          </div>
+          {% endif %}
+
+          {% if posts %}
+          <div class="posts-list">
+            {% for post in posts %}
+            <article class="post-item">
+              {% if post.featured_image %}
+              <a href="{{ post.url }}" class="post-item-image">
+                <img src="{{ post.featured_image }}" alt="{{ post.title }}" loading="lazy">
+              </a>
+              {% endif %}
+              <div class="post-item-content">
+                <div class="post-item-meta">
+                  {% if post.category %}
+                  <a href="/category/{{ post.category.slug }}" class="post-category">{{ post.category.name }}</a>
+                  <span class="sep">·</span>
+                  {% endif %}
+                  <time datetime="{{ post.date | date(format="Y-m-d") }}">{{ post.date | date(format="M d, Y") }}</time>
+                </div>
+                <h2 class="post-item-title">
+                  <a href="{{ post.url }}">{{ post.title }}</a>
+                </h2>
+                <p class="post-item-excerpt">{{ post.excerpt | truncate(length=150) }}</p>
+                <a href="{{ post.url }}" class="read-more">
+                  Read More
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </a>
+              </div>
+            </article>
+            {% endfor %}
+          </div>
+
+          <!-- Pagination -->
+          {% if pagination %}
+          <nav class="pagination" aria-label="Page pagination">
+            {% if pagination.prev_url %}
+            <a href="{{ pagination.prev_url }}" class="pagination-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              Previous
+            </a>
+            {% endif %}
+
+            <div class="pagination-pages">
+              {% for page in pagination.pages %}
+                {% if page == '...' %}
+                  <span class="pagination-ellipsis">...</span>
+                {% else %}
+                  <a href="{{ page.url }}" class="pagination-page {% if page.current %}active{% endif %}">{{ page.number }}</a>
+                {% endif %}
+              {% endfor %}
+            </div>
+
+            {% if pagination.next_url %}
+            <a href="{{ pagination.next_url }}" class="pagination-btn">
+              Next
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
+            {% endif %}
+          </nav>
+          {% endif %}
+          {% endif %}
+        </article>
+
+        <!-- Sidebar -->
+        <aside class="content-sidebar">
+          {% include "templates/partials/sidebar.html" %}
+        </aside>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}
+
+{% block styles %}
+<style>
+.page-header {
+  padding: var(--space-16) 0 var(--space-12);
+  background: var(--gradient-dark);
+}
+
+.page-header-content {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.page-title {
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-bold);
+  margin-bottom: var(--space-4);
+}
+
+.page-description {
+  font-size: var(--text-lg);
+  color: var(--color-text-secondary);
+}
+
+/* Content Layout */
+.content-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: var(--space-12);
+}
+
+.content-main {
+  min-width: 0;
+}
+
+/* Prose Styles */
+.prose {
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-secondary);
+}
+
+.prose h2 {
+  font-size: var(--text-2xl);
+  margin-top: var(--space-10);
+  margin-bottom: var(--space-4);
+}
+
+.prose h3 {
+  font-size: var(--text-xl);
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-3);
+}
+
+.prose p {
+  margin-bottom: var(--space-6);
+}
+
+.prose a {
+  color: var(--color-rust-light);
+  text-decoration: underline;
+}
+
+.prose ul, .prose ol {
+  margin-bottom: var(--space-6);
+  padding-left: var(--space-6);
+}
+
+.prose li {
+  margin-bottom: var(--space-2);
+}
+
+/* Posts List */
+.posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.post-item {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--space-6);
+  background: var(--color-bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.post-item:hover {
+  border-color: var(--border-rust);
+  box-shadow: var(--shadow-lg);
+}
+
+.post-item-image {
+  aspect-ratio: 16/10;
+  overflow: hidden;
+}
+
+.post-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.post-item:hover .post-item-image img {
+  transform: scale(1.05);
+}
+
+.post-item-content {
+  padding: var(--space-6) var(--space-6) var(--space-6) 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.post-item-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-3);
+}
+
+.post-item-meta .sep {
+  color: var(--border-color);
+}
+
+.post-category {
+  color: var(--color-rust-light);
+  font-weight: var(--weight-medium);
+}
+
+.post-item-title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  margin-bottom: var(--space-3);
+}
+
+.post-item-title a:hover {
+  color: var(--color-rust-light);
+}
+
+.post-item-excerpt {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
+  margin-bottom: var(--space-4);
+  flex: 1;
+}
+
+.read-more {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-rust-light);
+}
+
+.read-more:hover {
+  gap: var(--space-3);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-12);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--border-color);
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+.pagination-btn:hover {
+  border-color: var(--color-rust);
+  color: var(--color-rust-light);
+}
+
+.pagination-pages {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.pagination-page {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+
+.pagination-page:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.pagination-page.active {
+  background: var(--color-rust);
+  color: white;
+}
+
+@media (max-width: 1024px) {
+  .content-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .content-sidebar {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    padding: var(--space-12) 0 var(--space-8);
+  }
+
+  .page-title {
+    font-size: var(--text-3xl);
+  }
+
+  .post-item {
+    grid-template-columns: 1fr;
+  }
+
+  .post-item-content {
+    padding: var(--space-5);
+  }
+}
+</style>
+{% endblock %}

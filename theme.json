@@ -1,10 +1,130 @@
 {
   "name": "RustPress Enterprise",
-  "version": "1.0.0",
-  "description": "The official enterprise theme for RustPress CMS",
+  "version": "2.0.0",
+  "description": "The official RustPress theme - A stunning, animated landing page showcasing RustPress CMS. Features rust-orange color scheme, modern animations, AI integration highlights, developer ecosystem showcase, and full CMS compatibility.",
   "author": "RustPress Team",
   "license": "MIT",
-  "homepage": "https://github.com/rustpress-net/rustpress-theme-rustpress-enterprise",
-  "keywords": ["enterprise", "business", "professional", "multisite"],
-  "rustpress_version": ">=1.0.0"
+  "homepage": "https://rustpress.net",
+  "repository": "https://github.com/rustpress-net/rustpress-theme-rustpress-enterprise",
+  "keywords": [
+    "rustpress",
+    "cms",
+    "theme",
+    "landing-page",
+    "animated",
+    "rust",
+    "ai-integrated"
+  ],
+  "engines": {
+    "rustpress": ">=1.0.0"
+  },
+  "main": "templates/base.html",
+  "templates": {
+    "home": "templates/pages/home.html",
+    "page": "templates/pages/page.html",
+    "post": "templates/pages/post.html",
+    "blog": "templates/pages/blog.html",
+    "archive": "templates/pages/archive.html",
+    "contact": "templates/pages/contact.html",
+    "404": "templates/pages/404.html"
+  },
+  "partials": {
+    "header": "templates/partials/header.html",
+    "footer": "templates/partials/footer.html",
+    "sidebar": "templates/partials/sidebar.html",
+    "mobile-menu": "templates/partials/mobile-menu.html",
+    "hero": "templates/partials/hero.html",
+    "features": "templates/partials/features.html",
+    "ai-showcase": "templates/partials/ai-showcase.html",
+    "ecosystem": "templates/partials/ecosystem.html",
+    "comparison": "templates/partials/comparison.html",
+    "gallery": "templates/partials/gallery.html",
+    "donations": "templates/partials/donations.html",
+    "contact-form": "templates/partials/contact-form.html",
+    "stats": "templates/partials/stats.html"
+  },
+  "assets": {
+    "css": [
+      "assets/css/variables.css",
+      "assets/css/base.css",
+      "assets/css/typography.css",
+      "assets/css/layout.css",
+      "assets/css/components.css",
+      "assets/css/animations.css",
+      "assets/css/sections.css",
+      "assets/css/responsive.css"
+    ],
+    "js": [
+      "assets/js/animations.js",
+      "assets/js/navigation.js",
+      "assets/js/particles.js",
+      "assets/js/counters.js",
+      "assets/js/forms.js",
+      "assets/js/gallery.js",
+      "assets/js/main.js"
+    ]
+  },
+  "customizable": {
+    "colors": {
+      "primary": "#CE422B",
+      "secondary": "#B87333",
+      "accent": "#E97451",
+      "background": "#0D0D0D",
+      "surface": "#1A1A1A",
+      "text": "#FFFFFF",
+      "text-muted": "#A0A0A0"
+    },
+    "fonts": {
+      "heading": "Space Grotesk",
+      "body": "Inter",
+      "code": "JetBrains Mono"
+    },
+    "features": {
+      "particles": true,
+      "darkMode": true,
+      "animations": true,
+      "contactForm": true,
+      "donations": true,
+      "blog": true
+    }
+  },
+  "menus": {
+    "primary": {
+      "location": "header",
+      "depth": 2
+    },
+    "footer": {
+      "location": "footer",
+      "depth": 1
+    },
+    "mobile": {
+      "location": "mobile-menu",
+      "depth": 2
+    }
+  },
+  "sidebars": {
+    "blog": {
+      "name": "Blog Sidebar",
+      "description": "Widgets for blog pages"
+    },
+    "page": {
+      "name": "Page Sidebar",
+      "description": "Widgets for static pages"
+    }
+  },
+  "supports": [
+    "posts",
+    "pages",
+    "menus",
+    "widgets",
+    "custom-logo",
+    "custom-header",
+    "custom-footer",
+    "featured-images",
+    "excerpts",
+    "comments",
+    "search",
+    "rss",
+    "sitemap"
+  ]
 }
