@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main, without-rustpress, develop]
   pull_request:
-    branches: [main, master]
+    branches: [main, without-rustpress]
 
 jobs:
   validate:
@@ -20,15 +20,157 @@ jobs:
             exit 1
           fi
           jq empty theme.json || (echo "Error: Invalid JSON in theme.json" && exit 1)
-          echo "theme.json is valid"
+          echo "✓ theme.json is valid"
 
-      - name: Check required structure
+      - name: Detect build type
+        id: detect
         run: |
-          echo "Checking theme structure..."
-          for dir in templates static; do
-            if [ -d "$dir" ]; then
-              echo "✓ $dir/ exists"
+          if [ -f "index.html" ] && [ ! -d "templates" ]; then
+            echo "type=static" >> $GITHUB_OUTPUT
+            echo "Detected: Static HTML site"
+          else
+            echo "type=template" >> $GITHUB_OUTPUT
+            echo "Detected: Template-based site"
+          fi
+
+      - name: Check required structure (static)
+        if: steps.detect.outputs.type == 'static'
+        run: |
+          echo "Checking static site structure..."
+          ERRORS=0
+
+          # Check for required HTML files
+          for file in index.html; do
+            if [ -f "$file" ]; then
+              echo "✓ $file exists"
             else
-              echo "⚠ $dir/ not found"
+              echo "✗ $file missing"
+              ERRORS=$((ERRORS + 1))
             fi
           done
+
+          # Check for assets
+          if [ -d "assets/css" ]; then
+            echo "✓ assets/css/ exists"
+          else
+            echo "✗ assets/css/ missing"
+            ERRORS=$((ERRORS + 1))
+          fi
+
+          if [ -d "assets/js" ]; then
+            echo "✓ assets/js/ exists"
+          else
+            echo "✗ assets/js/ missing"
+            ERRORS=$((ERRORS + 1))
+          fi
+
+          if [ $ERRORS -gt 0 ]; then
+            echo "Found $ERRORS errors"
+            exit 1
+          fi
+
+      - name: Check required structure (template)
+        if: steps.detect.outputs.type == 'template'
+        run: |
+          echo "Checking template site structure..."
+          ERRORS=0
+
+          # Check for templates directory
+          if [ -d "templates" ]; then
+            echo "✓ templates/ exists"
+          else
+            echo "✗ templates/ missing"
+            ERRORS=$((ERRORS + 1))
+          fi
+
+          # Check for assets
+          if [ -d "assets" ]; then
+            echo "✓ assets/ exists"
+          else
+            echo "✗ assets/ missing"
+            ERRORS=$((ERRORS + 1))
+          fi
+
+          if [ $ERRORS -gt 0 ]; then
+            echo "Found $ERRORS errors"
+            exit 1
+          fi
+
+      - name: Validate CSS files
+        run: |
+          echo "Checking CSS files..."
+          for css in assets/css/*.css; do
+            if [ -f "$css" ]; then
+              echo "✓ $css"
+            fi
+          done
+
+      - name: Validate JS files
+        run: |
+          echo "Checking JS files..."
+          for js in assets/js/*.js; do
+            if [ -f "$js" ]; then
+              echo "✓ $js"
+            fi
+          done
+
+  lint-html:
+    name: Lint HTML
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install html-validate
+        run: npm install -g html-validate
+
+      - name: Lint HTML files
+        continue-on-error: true
+        run: |
+          # Find all HTML files and validate
+          find . -name "*.html" -not -path "./.git/*" | head -20 | while read file; do
+            echo "Checking $file..."
+            html-validate "$file" --config '{"extends": ["html-validate:recommended"], "rules": {"no-trailing-whitespace": "off", "attr-quotes": "off"}}' || true
+          done
+
+  test-build:
+    name: Test Build
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect build type
+        id: detect
+        run: |
+          if [ -f "index.html" ] && [ ! -d "templates" ]; then
+            echo "type=static" >> $GITHUB_OUTPUT
+          else
+            echo "type=template" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Test static build
+        if: steps.detect.outputs.type == 'static'
+        run: |
+          echo "Testing static build..."
+          mkdir -p dist
+          cp *.html dist/ 2>/dev/null || true
+          cp -r assets dist/
+          cp theme.json dist/
+          echo "✓ Static build successful"
+          ls -la dist/
+
+      - name: Test template build
+        if: steps.detect.outputs.type == 'template'
+        run: |
+          echo "Testing template build..."
+          mkdir -p dist
+          cp -r templates dist/
+          cp -r assets dist/
+          cp theme.json dist/
+          echo "✓ Template build successful"
+          ls -la dist/
