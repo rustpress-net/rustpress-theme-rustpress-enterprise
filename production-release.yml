@@ -1,5 +1,5 @@
 # Production Release Configuration
-# Last updated: 2026-01-25 - v3
+# Last updated: 2026-01-25 - v4
 # This file defines which branch should be deployed to the production server.
 # When this file is modified and pushed to main, the deploy workflow will automatically
 # deploy the specified branch to the target server.

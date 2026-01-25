@@ -20,6 +20,7 @@ jobs:
       SERVER_HOST: ${{ secrets.SERVER_HOST }}
       SERVER_PORT: ${{ secrets.SERVER_PORT }}
       SERVER_USER: ${{ secrets.SERVER_USER }}
+      SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
 
     steps:
       - name: Checkout main branch (for config)
@@ -54,18 +55,14 @@ jobs:
           ref: ${{ steps.config.outputs.deploy_branch }}
           path: deploy-content
 
-      - name: Setup SSH key
+      - name: Install sshpass
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          echo "StrictHostKeyChecking no" >> ~/.ssh/config
-          echo "UserKnownHostsFile /dev/null" >> ~/.ssh/config
-          chmod 600 ~/.ssh/config
+          sudo apt-get update
+          sudo apt-get install -y sshpass
 
       - name: Prepare server directories and create backup
         run: |
-          ssh -i ~/.ssh/deploy_key -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} << 'ENDSSH'
+          sshpass -p "${SERVER_PASSWORD}" ssh -o StrictHostKeyChecking=no -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} << 'ENDSSH'
             BACKUP_PATH="${{ steps.config.outputs.backup_path }}"
             SERVER_PATH="${{ steps.config.outputs.server_path }}"
             KEEP_COUNT="${{ steps.config.outputs.keep_count }}"
@@ -122,14 +119,14 @@ jobs:
           ls -la deploy-content/
 
           # Sync files to server
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -p ${SERVER_PORT} -o StrictHostKeyChecking=no" \
+          sshpass -p "${SERVER_PASSWORD}" rsync -avz --delete \
+            -e "ssh -o StrictHostKeyChecking=no -p ${SERVER_PORT}" \
             deploy-content/ \
             ${SERVER_USER}@${SERVER_HOST}:${{ steps.config.outputs.server_path }}/
 
       - name: Verify deployment
         run: |
-          ssh -i ~/.ssh/deploy_key -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} << 'ENDSSH'
+          sshpass -p "${SERVER_PASSWORD}" ssh -o StrictHostKeyChecking=no -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} << 'ENDSSH'
             SERVER_PATH="${{ steps.config.outputs.server_path }}"
             echo "Deployment verification:"
             echo "Files in ${SERVER_PATH}:"
@@ -137,8 +134,3 @@ jobs:
             echo ""
             echo "Deployment completed successfully!"
           ENDSSH
-
-      - name: Cleanup SSH key
-        if: always()
-        run: |
-          rm -f ~/.ssh/deploy_key
