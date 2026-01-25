@@ -16,6 +16,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      SERVER_HOST: ${{ secrets.SERVER_HOST }}
+      SERVER_PORT: ${{ secrets.SERVER_PORT }}
+      SERVER_USER: ${{ secrets.SERVER_USER }}
 
     steps:
       - name: Checkout main branch (for config)
@@ -61,7 +65,7 @@ jobs:
 
       - name: Prepare server directories and create backup
         run: |
-          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'ENDSSH'
+          ssh -i ~/.ssh/deploy_key -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} << 'ENDSSH'
             BACKUP_PATH="${{ steps.config.outputs.backup_path }}"
             SERVER_PATH="${{ steps.config.outputs.server_path }}"
             KEEP_COUNT="${{ steps.config.outputs.keep_count }}"
@@ -119,13 +123,13 @@ jobs:
 
           # Sync files to server
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no" \
+            -e "ssh -i ~/.ssh/deploy_key -p ${SERVER_PORT} -o StrictHostKeyChecking=no" \
             deploy-content/ \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ steps.config.outputs.server_path }}/
+            ${SERVER_USER}@${SERVER_HOST}:${{ steps.config.outputs.server_path }}/
 
       - name: Verify deployment
         run: |
-          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'ENDSSH'
+          ssh -i ~/.ssh/deploy_key -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} << 'ENDSSH'
             SERVER_PATH="${{ steps.config.outputs.server_path }}"
             echo "Deployment verification:"
             echo "Files in ${SERVER_PATH}:"
