@@ -1,5 +1,5 @@
 # Production Release Configuration
-# Last updated: 2026-01-25 - v5
+# Last updated: 2026-01-25 - v6
 # This file defines which branch should be deployed to the production server.
 # When this file is modified and pushed to main, the deploy workflow will automatically
 # deploy the specified branch to the target server.
@@ -8,7 +8,7 @@
 deploy_branch: without-rustpress
 
 # Target server path (where files will be deployed)
-server_path: /var/www/html
+server_path: /var/www/rustpress-static
 
 # Backup settings
 backup:
