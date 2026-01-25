@@ -1,0 +1,16 @@
+# Production Release Configuration
+# This file defines which branch should be deployed to the production server.
+# When this file is modified and pushed to main, the deploy workflow will automatically
+# deploy the specified branch to the target server.
+
+# The branch to deploy to production
+deploy_branch: without-rustpress
+
+# Target server path (where files will be deployed)
+server_path: /var/www/html
+
+# Backup settings
+backup:
+  enabled: true
+  path: /var/www/_backups
+  keep_count: 5  # Number of backups to retain

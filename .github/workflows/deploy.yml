@@ -1,0 +1,118 @@
+name: Deploy to Production Server
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'production-release.yml'
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: 'Force deployment even without config change'
+        required: false
+        default: 'false'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main branch (for config)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: config-repo
+
+      - name: Read deployment configuration
+        id: config
+        run: |
+          # Parse the production-release.yml file
+          DEPLOY_BRANCH=$(grep 'deploy_branch:' config-repo/production-release.yml | awk '{print $2}')
+          SERVER_PATH=$(grep 'server_path:' config-repo/production-release.yml | awk '{print $2}')
+          BACKUP_ENABLED=$(grep -A1 'backup:' config-repo/production-release.yml | grep 'enabled:' | awk '{print $2}')
+          BACKUP_PATH=$(grep -A2 'backup:' config-repo/production-release.yml | grep 'path:' | awk '{print $2}')
+          KEEP_COUNT=$(grep -A3 'backup:' config-repo/production-release.yml | grep 'keep_count:' | awk '{print $2}')
+
+          echo "deploy_branch=${DEPLOY_BRANCH}" >> $GITHUB_OUTPUT
+          echo "server_path=${SERVER_PATH}" >> $GITHUB_OUTPUT
+          echo "backup_enabled=${BACKUP_ENABLED}" >> $GITHUB_OUTPUT
+          echo "backup_path=${BACKUP_PATH}" >> $GITHUB_OUTPUT
+          echo "keep_count=${KEEP_COUNT}" >> $GITHUB_OUTPUT
+
+          echo "Deploying branch: ${DEPLOY_BRANCH}"
+          echo "Server path: ${SERVER_PATH}"
+          echo "Backup enabled: ${BACKUP_ENABLED}"
+
+      - name: Checkout branch to deploy
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.config.outputs.deploy_branch }}
+          path: deploy-content
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p ${{ secrets.SERVER_PORT }} -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Create backup on server
+        if: steps.config.outputs.backup_enabled == 'true'
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'ENDSSH'
+            BACKUP_PATH="${{ steps.config.outputs.backup_path }}"
+            SERVER_PATH="${{ steps.config.outputs.server_path }}"
+            KEEP_COUNT="${{ steps.config.outputs.keep_count }}"
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+            # Create backup directory if it doesn't exist
+            mkdir -p "${BACKUP_PATH}"
+
+            # Create backup of current content if it exists
+            if [ -d "${SERVER_PATH}" ] && [ "$(ls -A ${SERVER_PATH} 2>/dev/null)" ]; then
+              echo "Creating backup: ${BACKUP_PATH}/backup_${TIMESTAMP}.zip"
+              cd "${SERVER_PATH}"
+              zip -r "${BACKUP_PATH}/backup_${TIMESTAMP}.zip" . -x "*.zip"
+
+              # Remove old backups (keep only the most recent ones)
+              cd "${BACKUP_PATH}"
+              ls -t backup_*.zip 2>/dev/null | tail -n +$((KEEP_COUNT + 1)) | xargs -r rm --
+              echo "Backup created successfully"
+            else
+              echo "No existing content to backup"
+            fi
+          ENDSSH
+
+      - name: Deploy to server
+        run: |
+          # Remove .git folder and unnecessary files before deployment
+          rm -rf deploy-content/.git
+          rm -rf deploy-content/.github
+          rm -f deploy-content/.gitignore
+          rm -f deploy-content/CONTRIBUTING.md
+          rm -f deploy-content/LICENSE
+          rm -f deploy-content/README.md
+          rm -f deploy-content/theme.json
+
+          # Sync files to server
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT }}" \
+            deploy-content/ \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ steps.config.outputs.server_path }}/
+
+      - name: Verify deployment
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'ENDSSH'
+            SERVER_PATH="${{ steps.config.outputs.server_path }}"
+            echo "Deployment verification:"
+            echo "Files in ${SERVER_PATH}:"
+            ls -la "${SERVER_PATH}"
+            echo ""
+            echo "Deployment completed successfully!"
+          ENDSSH
+
+      - name: Cleanup SSH key
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key
