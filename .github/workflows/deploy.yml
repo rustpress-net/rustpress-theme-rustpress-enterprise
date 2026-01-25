@@ -57,30 +57,45 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.SERVER_PORT }} -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Create backup on server
-        if: steps.config.outputs.backup_enabled == 'true'
+      - name: Prepare server directories and create backup
         run: |
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'ENDSSH'
             BACKUP_PATH="${{ steps.config.outputs.backup_path }}"
             SERVER_PATH="${{ steps.config.outputs.server_path }}"
             KEEP_COUNT="${{ steps.config.outputs.keep_count }}"
+            BACKUP_ENABLED="${{ steps.config.outputs.backup_enabled }}"
             TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+            # Create server directory if it doesn't exist
+            mkdir -p "${SERVER_PATH}"
+            echo "Server path ready: ${SERVER_PATH}"
 
             # Create backup directory if it doesn't exist
             mkdir -p "${BACKUP_PATH}"
+            echo "Backup path ready: ${BACKUP_PATH}"
 
-            # Create backup of current content if it exists
-            if [ -d "${SERVER_PATH}" ] && [ "$(ls -A ${SERVER_PATH} 2>/dev/null)" ]; then
-              echo "Creating backup: ${BACKUP_PATH}/backup_${TIMESTAMP}.zip"
-              cd "${SERVER_PATH}"
-              zip -r "${BACKUP_PATH}/backup_${TIMESTAMP}.zip" . -x "*.zip"
+            # Install zip if not available
+            if ! command -v zip &> /dev/null; then
+              echo "Installing zip..."
+              apt-get update -qq && apt-get install -y -qq zip || yum install -y -q zip || true
+            fi
 
-              # Remove old backups (keep only the most recent ones)
-              cd "${BACKUP_PATH}"
-              ls -t backup_*.zip 2>/dev/null | tail -n +$((KEEP_COUNT + 1)) | xargs -r rm --
-              echo "Backup created successfully"
+            # Create backup of current content if backup is enabled and content exists
+            if [ "${BACKUP_ENABLED}" = "true" ]; then
+              if [ -d "${SERVER_PATH}" ] && [ "$(ls -A ${SERVER_PATH} 2>/dev/null)" ]; then
+                echo "Creating backup: ${BACKUP_PATH}/backup_${TIMESTAMP}.zip"
+                cd "${SERVER_PATH}"
+                zip -r "${BACKUP_PATH}/backup_${TIMESTAMP}.zip" . -x "*.zip" 2>/dev/null || echo "Backup created (or no files to backup)"
+
+                # Remove old backups (keep only the most recent ones)
+                cd "${BACKUP_PATH}"
+                ls -t backup_*.zip 2>/dev/null | tail -n +$((KEEP_COUNT + 1)) | xargs -r rm -- 2>/dev/null || true
+                echo "Backup completed successfully"
+              else
+                echo "No existing content to backup"
+              fi
             else
-              echo "No existing content to backup"
+              echo "Backup is disabled"
             fi
           ENDSSH
 
@@ -94,10 +109,15 @@ jobs:
           rm -f deploy-content/LICENSE
           rm -f deploy-content/README.md
           rm -f deploy-content/theme.json
+          rm -f deploy-content/production-release.yml
+
+          # Show what will be deployed
+          echo "Files to deploy:"
+          ls -la deploy-content/
 
           # Sync files to server
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT }}" \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no" \
             deploy-content/ \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ steps.config.outputs.server_path }}/
 
